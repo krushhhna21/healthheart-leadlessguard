@@ -9,7 +9,7 @@
     "server": "npm --prefix server run dev",
     "build": "tsc && vite build && npm --prefix server run build",
     "start": "node server/dist/server.js",
-    "postinstall": "npm --prefix server ci",
+    "postinstall": "npm --prefix server ci --include=dev",
     "preview": "vite preview",
     "server:install": "npm --prefix server install",
     "install:all": "npm install && npm --prefix server install"
