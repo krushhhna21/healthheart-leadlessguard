@@ -7,10 +7,15 @@
     "dev": "concurrently -n \"SERVER,CLIENT\" -c \"cyan,magenta\" \"npm run server\" \"npm run client\"",
     "client": "vite",
     "server": "npm --prefix server run dev",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build && npm --prefix server run build",
+    "start": "node server/dist/server.js",
+    "postinstall": "npm --prefix server ci",
     "preview": "vite preview",
     "server:install": "npm --prefix server install",
     "install:all": "npm install && npm --prefix server install"
+  },
+  "engines": {
+    "node": "22.x"
   },
   "dependencies": {
     "lucide-react": "^1.16.0",

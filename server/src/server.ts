@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { connectDB } from './config/db.js';
 import { seedDatabase } from './seed.js';
 
@@ -27,13 +29,14 @@ app.use('/api/audit', auditRoutes);
 app.use('/api/scenarios', scenarioRoutes);
 app.use('/api/health', healthRoutes);
 
-// Root greeting
-app.get('/', (_req, res) => {
-  res.json({
-    service: 'LeadlessGuard / HealthHeart Clinical Telemetry Engine',
-    version: '1.0.0',
-    status: 'ONLINE',
-  });
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const frontendDistPath = path.resolve(__dirname, '../../dist');
+
+app.use(express.static(frontendDistPath));
+
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(frontendDistPath, 'index.html'));
 });
 
 // Start Server & Connect Database

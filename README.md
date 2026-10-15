@@ -30,6 +30,97 @@
 
 **HealthHeart™ / LeadlessGuard™** models an end-to-end telemetry architecture for a next-generation smartphone-integrated leadless cardiac pacemaker (*LeadlessGuard VR-Pro*). Built with **React 18**, **TypeScript**, and **Express.js**, the platform simulates electrophysiological signal dynamics, device sensing/pacing logic, energy consumption, cryptographic integrity, and clinician-patient telemetry interfaces.
 
+## 🚀 Deploy on DigitalOcean with Docker
+
+The repository includes a production Docker Compose setup containing the React frontend, Express API, and a private MongoDB container. The database is persisted in a Docker volume and is not exposed to the public internet.
+
+### 1. Create a Droplet
+
+In DigitalOcean, create an **Ubuntu 24.04 LTS** Droplet. The smallest Basic Droplet is enough for a demonstration deployment. Add your SSH key during creation and create a firewall that allows **SSH (22)**, **HTTP (80)**, and **HTTPS (443)**.
+
+### 2. Install Docker and download the project
+
+Connect to the Droplet over SSH, then run:
+
+```bash
+sudo apt update
+sudo apt install -y ca-certificates curl git
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker "$USER"
+newgrp docker
+git clone https://github.com/KotgireOmkar/healthheart-leadlessguard.git
+cd healthheart-leadlessguard
+```
+
+### 3. Start the complete application
+
+```bash
+docker compose up -d --build
+docker compose ps
+```
+
+Open the Droplet IP address in a browser. The first startup can take a few minutes because the images and dependencies must be downloaded.
+
+Useful commands:
+
+```bash
+docker compose logs -f
+docker compose logs -f server
+docker compose restart
+docker compose down
+```
+
+Do not run `docker compose down -v` unless you intentionally want to delete the MongoDB data volume.
+
+### 4. Add a domain and HTTPS
+
+Create an `A` record at your domain provider pointing to the Droplet IP, then use a reverse proxy such as Caddy or DigitalOcean's documented HTTPS setup to terminate TLS on port 443 and forward traffic to port 80. Do not expose MongoDB publicly.
+
+This deployment is for the project's research simulator and does not make it a clinical device or diagnostic service. Configure backups and HTTPS before putting any non-public data on the server.
+
+## ☁️ Deploy on Heroku
+
+Heroku can run the complete application as one web app. This repository includes a `Procfile`; the Heroku build compiles both the React frontend and Express server, and Express serves the frontend.
+
+Heroku does not provide the local MongoDB container used by Docker Compose. Create a MongoDB Atlas database, allow the Heroku connection (for a quick demo you can temporarily allow `0.0.0.0/0`), and copy the Atlas connection string.
+
+Install the Heroku CLI, sign in, and run these commands from the repository root:
+
+```bash
+heroku login
+heroku create your-healthheart-app
+heroku config:set NODE_ENV=production
+heroku config:set MONGODB_URI="mongodb+srv://USER:PASSWORD@CLUSTER/healthheart?retryWrites=true&w=majority"
+git push heroku main
+heroku open
+```
+
+If your Git branch is not named `main`, use:
+
+```bash
+git push heroku HEAD:main
+```
+
+View logs with:
+
+```bash
+heroku logs --tail
+```
+
+Heroku hosting is billed according to the selected dyno plan; check the current [Heroku pricing](https://www.heroku.com/pricing) before creating the app. The app is a research simulator and is not approved for clinical diagnosis or therapy.
+
+## 🌐 Deploy on Render
+
+Render is another simple option and can deploy this repository directly from GitHub. The included `render.yaml` creates a Node web service, builds the React frontend and Express API, and checks `/api/health`.
+
+1. Create a MongoDB Atlas database and copy its connection string.
+2. In the [Render dashboard](https://dashboard.render.com/), choose **New → Blueprint**.
+3. Connect the GitHub repository and select the branch containing `render.yaml`.
+4. When Render asks for `MONGODB_URI`, paste the MongoDB Atlas connection string as a secret.
+5. Create the service and open the generated `onrender.com` URL when the deployment finishes.
+
+The free Render plan is suitable for a demo but may pause after inactivity, so the first request after a pause can take longer. Upgrade the web service if the application must stay continuously available. Do not put MongoDB credentials in source code.
+
 ### Core Objectives
 1. **Electrophysiological Fidelity:** High-rate 4-track biosignal oscilloscope (ECG, PPG, SpO2, BIA) with deterministic synthetic waveform generation and PhysioNet MIT-BIH Arrhythmia database exploration.
 2. **Transparent Pacing Emulation:** Mathematical VVI and VVIR pacing logic modeling refractory periods (250 ms), sensitivity thresholds (1.5 mV), and Lower Rate Limits (60 BPM).
